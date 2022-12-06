@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>music-space</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+        integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://code.jquery.com/jquery-3.6.1.js"
+        integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .main_background .back {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .main_phone .phone-mockup {
+            position: absolute;
+            width: 27%;
+            left: 22%;
+            bottom: 8%;
+            z-index: -1;
+        }
+
+        .character .professor {
+            position: absolute;
+            width: 20%;
+            left: 55%;
+            bottom: 12%;
+            z-index: 1;
+        }
+
+        .player {
+            height: 95vh;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            width: 71%;
+        }
+
+        .wrapper {
+            border: 1px solid transparent;
+            padding: 15px 32px;
+            background-color: #BCE1FB;
+            box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+        }
+
+        .details {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .details .track-artist {
+            font-size: 12px;
+            margin-top: 2px;
+            margin-left: 6px;
+        }
+
+        .details .track-name {
+            margin-left: 6px;
+            font-weight: 700;
+        }
+
+        .track-art {
+            margin: 25px;
+            width: 220px;
+            height: 220px;
+            border: 2px solid #222222;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .active {
+            color: black;
+        }
+
+        .playpause-track,
+        .preview-track,
+        .next-track {
+            padding: 25px;
+            opacity: 0.8;
+            transition: opacity .2s;
+        }
+
+        .playpause-track:hover,
+        .preview-track:hover,
+        .next-track:hover {
+            opacity: 1.0;
+        }
+
+        .slider_container {
+            display: flex;
+        }
+
+        .seek_slider {
+            margin-top: 14px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: #BFBFBF;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        .seek_slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #757575;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .seek_slider:hover {
+            opacity: 1.0;
+        }
+
+        .seek_slider {
+            width: 80%;
+        }
+
+        .current-time,
+        .total-duration {
+            padding: 6px;
+            font-size: 12px;
+        }
+
+        i,
+        i.fa-step-backward,
+        i.fa-play,
+        i.fa-step-forward {
+            cursor: pointer;
+        }
+
+        .my_bg {
+            background-image: url("music/01.jpg");
+            background-size: contain;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main_background">
+        <img class="back" src="img/background.png">
+    </div>
+
+    <div class="main_phone">
+        <img class="phone-mockup" src="img/phone-bgx 2.png">
+    </div>
+
+    <div class="character">
+        <img class="professor" src="img/professor.png">
+    </div>
+
+    <div class="player">
+        <div class="wrapper">
+            <div class="details">
+                <div id="track-art" class="track-art my_bg"></div>
+                <div id="track-name" class="track-name"></div>
+                <div id="track-artist" class="track-artist">Track Artist</div>
+            </div>
+
+            <div class="slider_container">
+                <div id="current-time" class="current-time">0:00</div>
+                <input type="range" min="1" max="242" value="0" id="seek_slider" class="seek_slider"
+                    onchange="seekTo(this)">
+                <div id="total-duration" class="total-duration">0:00</div>
+            </div>
+
+            <div class="buttons">
+                <div id="preview-track" class="preview-track" onclick="previewTrack()">
+                    <i class="fas fa-step-backward fa-2x"></i>
+                </div>
+
+                <div id="playpause-track" class="playpause-track" onclick="playpauseTrack()">
+                    <i id="play_btn" class="fas fa-play fa-3x"></i>
+                    <i id="pause_btn" class="fa-solid fa-pause fa-3x" style="display: none;"></i>
+                </div>
+
+                <div id="next-track" class="next-track" onclick="nextTrack()">
+                    <i class="fas fa-step-forward fa-2x"></i>
+                </div>
+            </div>
+        </div>
+
+
+        <script>
+            let track_art = document.querySelector('#track-art');
+            let track_name = document.querySelector('#track-name');
+            let track_artist = document.querySelector('#track-artist');
+
+            let prev_btn = document.querySelector('#preview-track');
+            let playpause_btn = document.querySelector('#playpause-track');
+            let next_btn = document.querySelector('#next-track');
+
+            let seek_slider = document.querySelector('#seek_slider');
+            let current_time = document.querySelector('#current-time');
+            let total_duration = document.querySelector('#total-duration');
+            let current_track = document.createElement('audio');
+
+            let title = document.querySelector('#track-name');
+            let artist = document.querySelector('#track-artist');
+
+
+            let track_index = 0;
+            let isPlaying = false;
+            let updateTimer;
+
+            const range = {
+                isPause: false,
+                timer: null
+            }
+
+            const music_list = [
+                {
+                    audio: 'music/01.mp3',
+                    img: 'music/01.jpg',
+                    title: '사랑은 늘 도망가',
+                    author: '임영웅'
+                }
+            ];
+
+            // 음원명 / 아티스트 명 설정
+            title.innerText = music_list[0].title
+            artist.innerText = music_list[0].author
+
+            // 오디오 객체 생성
+            const audio = new Audio("./music/01.mp3")
+
+
+            // 오디오 종료 시
+            audio.addEventListener("ended", function () {
+                document.getElementById("pause_btn").style.display = "none";
+                document.getElementById("play_btn").style.display = "";
+                audio.currentTime = 0;
+                seek_slider.value = 0;
+                audio.pause();
+                stopCurrentRange();
+            });
+
+            // 오디오 재생 중일 때
+            audio.addEventListener("playing", function () {
+                console.log("재생중")
+            });
+
+            // 플레이 및 일시정지 버튼
+            const playpauseTrack = () => {
+                // 정지 상태
+                if (document.getElementById("pause_btn").style.display === "none") {
+                    document.getElementById("pause_btn").style.display = "";
+                    document.getElementById("play_btn").style.display = "none";
+                    getMusicTime()
+                    setMusicRange();
+                    setCurrentRange();
+                    audio.play()
+                } else { // 재생 중
+                    document.getElementById("pause_btn").style.display = "none";
+                    document.getElementById("play_btn").style.display = "";
+                    stopCurrentRange();
+                    audio.pause();
+                }
+            }
+
+            // +15초
+            const nextTrack = () => {
+                audio.currentTime = audio.currentTime + 15;
+            }
+
+            // -15초
+            const previewTrack = () => {
+                audio.currentTime = audio.currentTime - 15;
+            }
+
+            // 음악 시간 가져오기 (전체 음악 시간)
+            const getMusicTime = () => {
+                // 몫 가져오기
+                const min = parseInt(audio.duration / 60);
+                // 나머지 가져오기
+                const second = parseInt(audio.duration % 60);
+                second < 10 ? total_duration.innerText = `${min}:0${second}` : total_duration.innerText = `${min}:${second}`
+            }
+
+            // seek_slider Max 값 설정
+            const setMusicRange = () => {
+                seek_slider.max = audio.duration;
+            }
+
+            // 재생 바 드래그 시 설정 함수
+            const seekTo = (audioRange) => {
+                audio.currentTime = audioRange.value;
+
+                if (!audio.paused) {
+                    console.log(audio.currentTime);
+                    stopCurrentRange();
+                    setCurrentRange();
+                }
+
+            }
+
+            // 음악 재생 바 설정 함수 
+            const setCurrentRange = (type) => {
+                range.isPause = false;
+                // 0.3초마다 실행하면서 현재 재생시간 출력 해주는 코드
+                range.timer = setInterval(() => {
+                    console.log("실행중")
+                    rangeManger();
+                }, 300);
+            };
+
+            // 일시 정지 버튼 클릭
+            const stopCurrentRange = () => {
+                clearInterval(range.timer);
+                range.isPause = true;
+                console.log("음악 멈춤")
+
+            }
+
+            // 실제 재생 바 시간 출력 관련 담당 함수 부분
+            const rangeManger = () => {
+                if (!range.isPause) {
+                    const min = parseInt(audio.currentTime / 60);
+                    const second = parseInt(audio.currentTime % 60);
+                    seek_slider.value = audio.currentTime;
+                    currentMusicTime = parseInt(audio.currentTime);
+                    // 현재 시간 출력 코드
+                    if (currentMusicTime > 60) {
+                        second < 10 ? current_time.innerText = `${min}:0${second}` : current_time.innerText = `${min}:${second}`
+                    } else {
+                        second < 10 ? current_time.innerText = `0:0${second}` : current_time.innerText = `0:${second}`
+                    }
+                }
+            }
+
+        </script>
+</body>
+
+</html>
